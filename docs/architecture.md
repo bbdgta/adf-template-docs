@@ -1,14 +1,12 @@
-sequenceDiagram
-  participant Dev as Dev Project
-  participant ADO as Azure DevOps
-  participant REG as Registry
-  participant QA as QA Project
-  participant PROD as Prod Project
-
-  Dev->>ADO: push/train outputs (model artifacts)
-  ADO->>REG: az ml model create (NAME, VERSION, tags)
-  ADO->>ADO: run evaluation, enforce thresholds
-  ADO->>QA: az ml online-endpoint/deployment (model:version@REG)
-  QA-->>ADO: smoke test OK
-  ADO->>PROD: az ml online-deployment (same model:version)
-  PROD-->>ADO: health check OK
+flowchart LR
+  A[[Commit / New Model in Dev]] --> B[Build & Package]
+  B --> C[Register model in Registry<br/>azureml:NAME:VERSION@REGISTRY]
+  C --> D[Evaluate offline (quality gate)]
+  D -->|Pass| E[Deploy Infra (ARM/Bicep)<br/>per env: Project+KV+ST+Search]
+  E --> F[Deploy to DEV Project<br/>Create/Update Endpoint + Deployment]
+  F --> G{Manual Approval}
+  G -->|Approved| H[Deploy to QA Project<br/>Use same model:version]
+  H --> I[Smoke/Functional Tests]
+  I --> J{Manual Approval}
+  J -->|Approved| K[Deploy to PROD Project<br/>Use same model:version]
+  D -->|Fail| X[[Stop: do not promote]]
