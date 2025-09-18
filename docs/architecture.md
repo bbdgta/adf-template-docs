@@ -1,3 +1,6 @@
+# Deployment Flow
+
+```mermaid
 flowchart LR
   A[[Commit / New Model in Dev]] --> B[Build & Package]
   B --> C[Register model in Registry<br/>azureml:NAME:VERSION@REGISTRY]
